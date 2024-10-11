@@ -1,5 +1,4 @@
 
-
 // The breed selection input element.
 const breedSelect = document.getElementById("breedSelect");
 // The information section div element.
@@ -82,6 +81,12 @@ async function handleBreedChange() {
     const carouselInner = document.getElementById('carouselInner');
     carouselInner.innerHTML = '';
 
+    // Check if there are images available
+    if (breedImages.length === 0) {
+      infoDump.innerHTML = `<h2>No images available for this breed.</h2>`;
+      return;
+    }
+
     // Add new images to carousel
     const template = document.getElementById('carouselItemTemplate');
     breedImages.forEach((image, index) => {
@@ -101,20 +106,19 @@ async function handleBreedChange() {
     });
 
     // Display breed information
-    if (breedImages.length > 0) {
-      const breedInfo = breedImages[0].breeds[0];
-      infoDump.innerHTML = `
-        <h2>${breedInfo.name}</h2>
-        <p><strong>Origin:</strong> ${breedInfo.origin}</p>
-        <p><strong>Temperament:</strong> ${breedInfo.temperament}</p>
-        <p><strong>Description:</strong> ${breedInfo.description}</p>
-        <p><strong>Life Span:</strong> ${breedInfo.life_span} years</p>
-        <p><strong>Weight:</strong> ${breedInfo.weight.metric} kg</p>
-      `;
-    }
+    const breedInfo = breedImages[0].breeds[0];
+    infoDump.innerHTML = `
+      <h2>${breedInfo.name}</h2>
+      <p><strong>Origin:</strong> ${breedInfo.origin}</p>
+      <p><strong>Temperament:</strong> ${breedInfo.temperament}</p>
+      <p><strong>Description:</strong> ${breedInfo.description}</p>
+      <p><strong>Life Span:</strong> ${breedInfo.life_span} years</p>
+      <p><strong>Weight:</strong> ${breedInfo.weight.metric} kg</p>
+    `;
   } catch (error) {
     console.error('Error fetching breed information:', error);
     hideProgressBar();
+    infoDump.innerHTML = `<h2>Error loading breed information. Please try again later.</h2>`;
   }
 }
 
@@ -134,16 +138,28 @@ breedSelect.addEventListener('change', handleBreedChange);
 // Function to handle favoriting
 async function favourite(imgId) {
   try {
-    const response = await axios.post('/favourites', {
-      image_id: imgId
-    });
-    if (response.status === 200) {
-      alert('Image added to favorites!');
+    // Check if the image is already favorited
+    const response = await axios.get('/favourites');
+    const favorites = response.data;
+    const isFavorited = favorites.some(fav => fav.image_id === imgId);
+
+    if (isFavorited) {
+      // If already favorited, delete the favorite
+      await axios.delete(`/favourites/${imgId}`);
+      alert('Image removed from favorites!');
     } else {
-      alert('Failed to add image to favorites.');
+      // If not favorited, add to favorites
+      const response = await axios.post('/favourites', {
+        image_id: imgId
+      });
+      if (response.status === 200) {
+        alert('Image added to favorites!');
+      } else {
+        alert('Failed to add image to favorites.');
+      }
     }
   } catch (error) {
-    console.error('Error adding favorite:', error);
+    console.error('Error toggling favorite:', error);
   }
 }
 
