@@ -1,5 +1,5 @@
 
-import * as Carousel from "./Carousel.js";
+import * as Carousel from "./Carousel";
 import axios from "axios";
 
 // The breed selection input element.
@@ -12,8 +12,7 @@ const progressBar = document.getElementById("progressBar");
 const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 
 // Step 0: Store your API key here for reference and easy access.
-const API_KEY =
-  "live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
+const API_KEY ="live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
 
 
 
