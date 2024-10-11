@@ -1,5 +1,4 @@
-import * as Carousel from "./Carousel.js";
-import axios from "axios";
+
 
 // The breed selection input element.
 const breedSelect = document.getElementById("breedSelect");
@@ -13,15 +12,40 @@ const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 // Step 0: Store your API key here for reference and easy access.
 const API_KEY = "live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
 
+// Set default headers and base URL for Axios
+axios.defaults.baseURL = 'https://api.thecatapi.com/v1';
+axios.defaults.headers.common['x-api-key'] = API_KEY;
+
+// Add request interceptor
+axios.interceptors.request.use(config => {
+  console.log('Request started at:', new Date().toISOString());
+  document.body.style.cursor = 'progress'; // Change cursor style
+  progressBar.style.width = '0%'; // Reset progress bar
+  return config;
+});
+
+// Add response interceptor
+axios.interceptors.response.use(response => {
+  console.log('Response received at:', new Date().toISOString());
+  document.body.style.cursor = 'default'; // Reset cursor style
+  return response;
+}, error => {
+  document.body.style.cursor = 'default'; // Reset cursor style on error
+  return Promise.reject(error);
+});
+
+// Update progress function
+function updateProgress(event) {
+  const percentCompleted = Math.round((event.loaded * 100) / event.total);
+  progressBar.style.width = `${percentCompleted}%`;
+  console.log('Progress:', percentCompleted);
+}
+
 // Step 1: Initial Load Function
 async function initialLoad() {
   try {
-    const response = await fetch('https://api.thecatapi.com/v1/breeds', {
-      headers: {
-        'x-api-key': API_KEY
-      }
-    });
-    const breeds = await response.json();
+    const response = await axios.get('/breeds');
+    const breeds = response.data;
 
     breeds.forEach(breed => {
       const option = document.createElement('option');
@@ -44,12 +68,14 @@ async function handleBreedChange() {
 
   try {
     showProgressBar();
-    const response = await fetch(`https://api.thecatapi.com/v1/images/search?breed_ids=${selectedBreedId}&limit=5`, {
-      headers: {
-        'x-api-key': API_KEY
-      }
+    const response = await axios.get(`/images/search`, {
+      params: {
+        breed_ids: selectedBreedId,
+        limit: 5
+      },
+      onDownloadProgress: updateProgress // Track download progress
     });
-    const breedImages = await response.json();
+    const breedImages = response.data;
     hideProgressBar();
 
     // Clear existing carousel items
@@ -106,17 +132,12 @@ function hideProgressBar() {
 breedSelect.addEventListener('change', handleBreedChange);
 
 // Function to handle favoriting
-export async function favourite(imgId) {
+async function favourite(imgId) {
   try {
-    const response = await fetch('https://api.thecatapi.com/v1/favourites', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY
-      },
-      body: JSON.stringify({ image_id: imgId })
+    const response = await axios.post('/favourites', {
+      image_id: imgId
     });
-    if (response.ok) {
+    if (response.status === 200) {
       alert('Image added to favorites!');
     } else {
       alert('Failed to add image to favorites.');
@@ -130,12 +151,10 @@ export async function favourite(imgId) {
 async function getFavourites() {
   try {
     showProgressBar();
-    const response = await fetch('https://api.thecatapi.com/v1/favourites', {
-      headers: {
-        'x-api-key': API_KEY
-      }
+    const response = await axios.get('/favourites', {
+      onDownloadProgress: updateProgress // Track download progress
     });
-    const favorites = await response.json();
+    const favorites = response.data;
     hideProgressBar();
 
     // Clear existing carousel items
@@ -221,9 +240,9 @@ initialLoad();
  *   you delete that favourite using the API, giving this function "toggle" functionality.
  * - You can call this function by clicking on the heart at the top right of any image.
  */
-export async function favourite(imgId) {
-  // your code here
-}
+// export async function favourite(imgId) {
+//   // your code here
+// }
 
 /**
  * 9. Test your favourite() function by creating a getFavourites() function.
