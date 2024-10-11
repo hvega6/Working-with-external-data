@@ -1,5 +1,4 @@
-
-import * as Carousel from "./Carousel";
+import * as Carousel from "./Carousel.js";
 import axios from "axios";
 
 // The breed selection input element.
@@ -12,11 +11,9 @@ const progressBar = document.getElementById("progressBar");
 const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 
 // Step 0: Store your API key here for reference and easy access.
-const API_KEY ="live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
+const API_KEY = "live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
 
-
-
-/// Step 1: Initial Load Function
+// Step 1: Initial Load Function
 async function initialLoad() {
   try {
     const response = await fetch('https://api.thecatapi.com/v1/breeds', {
@@ -108,32 +105,29 @@ function hideProgressBar() {
 // Event listener for breed selection
 breedSelect.addEventListener('change', handleBreedChange);
 
-// Event listener for favorite button clicks
-document.addEventListener('click', async function(event) {
-  if (event.target.closest('.favourite-button')) {
-    const imgId = event.target.closest('.favourite-button').dataset.imgId;
-    try {
-      const response = await fetch('https://api.thecatapi.com/v1/favourites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY
-        },
-        body: JSON.stringify({ image_id: imgId })
-      });
-      if (response.ok) {
-        alert('Image added to favorites!');
-      } else {
-        alert('Failed to add image to favorites.');
-      }
-    } catch (error) {
-      console.error('Error adding favorite:', error);
+// Function to handle favoriting
+export async function favourite(imgId) {
+  try {
+    const response = await fetch('https://api.thecatapi.com/v1/favourites', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY
+      },
+      body: JSON.stringify({ image_id: imgId })
+    });
+    if (response.ok) {
+      alert('Image added to favorites!');
+    } else {
+      alert('Failed to add image to favorites.');
     }
+  } catch (error) {
+    console.error('Error adding favorite:', error);
   }
-});
+}
 
-// Event listener for get favorites button
-getFavouritesBtn.addEventListener('click', async function() {
+// Function to get favorites
+async function getFavourites() {
   try {
     showProgressBar();
     const response = await fetch('https://api.thecatapi.com/v1/favourites', {
@@ -171,13 +165,14 @@ getFavouritesBtn.addEventListener('click', async function() {
     console.error('Error fetching favorites:', error);
     hideProgressBar();
   }
-});
+}
+
+// Event listener for get favorites button
+getFavouritesBtn.addEventListener('click', getFavourites);
 
 // Initial load
 initialLoad();
-/**
- * 3. Fork your own sandbox, creating a new one named "JavaScript Axios Lab."
- */
+
 /**
  * 4. Change all of your fetch() functions to axios!
  * - axios has already been imported for you within index.js.
