@@ -1,43 +1,78 @@
-import * as Carousel from "./Carousel.js";
-import axios from "axios";
+// Step 0: API key is already defined in the provided code
 
-// The breed selection input element.
-const breedSelect = document.getElementById("breedSelect");
-// The information section div element.
-const infoDump = document.getElementById("infoDump");
-// The progress bar div element.
-const progressBar = document.getElementById("progressBar");
-// The get favourites button element.
-const getFavouritesBtn = document.getElementById("getFavouritesBtn");
+// Step 1: Initial Load Function
+async function initialLoad() {
+  try {
+    const response = await fetch('https://api.thecatapi.com/v1/breeds', {
+      headers: {
+        'x-api-key': API_KEY
+      }
+    });
+    const breeds = await response.json();
 
-// Step 0: Store your API key here for reference and easy access.
-const API_KEY =
-  "live_Y4We77eLPTldRYdJ8VNEom3Kc6fG0c52Zf6ljt7XDDo3NL09E4Ml3e7leRP2OArH";
+    breeds.forEach(breed => {
+      const option = document.createElement('option');
+      option.value = breed.id;
+      option.textContent = breed.name;
+      breedSelect.appendChild(option);
+    });
 
-/**
- * 1. Create an async function "initialLoad" that does the following:
- * - Retrieve a list of breeds from the cat API using fetch().
- * - Create new <options> for each of these breeds, and append them to breedSelect.
- *  - Each option should have a value attribute equal to the id of the breed.
- *  - Each option should display text equal to the name of the breed.
- * This function should execute immediately.
- */
+    // Initial breed selection
+    await handleBreedChange();
+  } catch (error) {
+    console.error('Error during initial load:', error);
+  }
+}
 
-/**
- * 2. Create an event handler for breedSelect that does the following:
- * - Retrieve information on the selected breed from the cat API using fetch().
- *  - Make sure your request is receiving multiple array items!
- *  - Check the API documentation if you're only getting a single object.
- * - For each object in the response array, create a new element for the carousel.
- *  - Append each of these new elements to the carousel.
- * - Use the other data you have been given to create an informational section within the infoDump element.
- *  - Be creative with how you create DOM elements and HTML.
- *  - Feel free to edit index.html and styles.css to suit your needs, but be careful!
- *  - Remember that functionality comes first, but user experience and design are important.
- * - Each new selection should clear, re-populate, and restart the Carousel.
- * - Add a call to this function to the end of your initialLoad function above to create the initial carousel.
- */
+// Step 2: Event handler for breed selection
+async function handleBreedChange() {
+  const selectedBreedId = breedSelect.value;
+  if (!selectedBreedId) return;
 
+  try {
+    const response = await fetch(`https://api.thecatapi.com/v1/images/search?breed_ids=${selectedBreedId}&limit=5`, {
+      headers: {
+        'x-api-key': API_KEY
+      }
+    });
+    const breedImages = await response.json();
+
+    // Clear existing carousel items
+    Carousel.clear();
+
+    // Add new images to carousel
+    breedImages.forEach(image => {
+      const imgElement = document.createElement('img');
+      imgElement.src = image.url;
+      imgElement.alt = 'Cat Image';
+      Carousel.appendItem(imgElement);
+    });
+
+    // Restart carousel
+    Carousel.start();
+
+    // Display breed information
+    if (breedImages.length > 0) {
+      const breedInfo = breedImages[0].breeds[0];
+      infoDump.innerHTML = `
+        <h2>${breedInfo.name}</h2>
+        <p><strong>Origin:</strong> ${breedInfo.origin}</p>
+        <p><strong>Temperament:</strong> ${breedInfo.temperament}</p>
+        <p><strong>Description:</strong> ${breedInfo.description}</p>
+        <p><strong>Life Span:</strong> ${breedInfo.life_span} years</p>
+        <p><strong>Weight:</strong> ${breedInfo.weight.metric} kg</p>
+      `;
+    }
+  } catch (error) {
+    console.error('Error fetching breed information:', error);
+  }
+}
+
+// Event listener for breed selection
+breedSelect.addEventListener('change', handleBreedChange);
+
+// Initial load
+initialLoad();
 /**
  * 3. Fork your own sandbox, creating a new one named "JavaScript Axios Lab."
  */
